@@ -66,7 +66,7 @@ while true; do
         echo "Client Name accepted... Let's go..."
         break
     else
-        echo "Untuk Daftar Hubungi Admin Hokage Legend"
+        echo "Untuk Daftar Hubungi Admin FVPN PREMIUM"
         rm -f /root/home # Ganti dengan path yang sesuai ke file installer
         exit 1
     fi
