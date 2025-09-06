@@ -212,33 +212,7 @@ function is_root() {
     fi
 
 }
-function base_package() {
-print_install "Menginstall Packet Yang Dibutuhkan"
-packages=(
-libnss3-dev liblzo2-dev libnspr4-dev pkg-config libpam0g-dev libcap-ng-dev
-libcap-ng-utils libselinux1-dev flex bison make libnss3-tools libevent-dev bc
-rsyslog dos2unix zlib1g-dev libssl-dev libsqlite3-dev sed dirmngr libxml-parser-perl build-essential
-gcc g++ htop lsof tar wget curl ruby zip unzip p7zip-full libc6 util-linux
-ca-certificates iptables iptables-persistent netfilter-persistent
-net-tools openssl gnupg gnupg2 lsb-release shc cmake git whois
-screen socat xz-utils apt-transport-https gnupg1 dnsutils cron bash-completion ntpdate chrony jq
-tmux python3 python3-pip lsb-release gawk
-libncursesw5-dev libgdbm-dev tk-dev libffi-dev libbz2-dev checkinstall
-openvpn easy-rsa dropbear
-)
-for package in "${packages[@]}"; do
-if ! dpkg -s "$package" >/dev/null 2>&1; then
-if ! apt-get update -y; then
-echo -e "${red}Failed to update${neutral}"
-fi
-if ! apt-get install -y "$package"; then
-echo -e "${red}Failed to install $package${neutral}"
-fi
-else
-echo -e "${green}$package is already installed, skipping...${neutral}"
-fi
-done
-}
+
 # Buat direktori xray
 print_install "Membuat direktori xray"
     mkdir -p /etc/xray
@@ -380,6 +354,33 @@ function nginx_install() {
 
 # Update and remove packages
 clear
+function base_package() {
+print_install "Menginstall Packet Yang Dibutuhkan"
+packages=(
+libnss3-dev liblzo2-dev libnspr4-dev pkg-config libpam0g-dev libcap-ng-dev
+libcap-ng-utils libselinux1-dev flex bison make libnss3-tools libevent-dev bc
+rsyslog dos2unix zlib1g-dev libssl-dev libsqlite3-dev sed dirmngr libxml-parser-perl build-essential
+gcc g++ htop lsof tar wget curl ruby zip unzip p7zip-full libc6 util-linux
+ca-certificates iptables iptables-persistent netfilter-persistent
+net-tools openssl gnupg gnupg2 lsb-release shc cmake git whois
+screen socat xz-utils apt-transport-https gnupg1 dnsutils cron bash-completion ntpdate chrony jq
+tmux python3 python3-pip lsb-release gawk
+libncursesw5-dev libgdbm-dev tk-dev libffi-dev libbz2-dev checkinstall
+openvpn easy-rsa dropbear
+)
+for package in "${packages[@]}"; do
+if ! dpkg -s "$package" >/dev/null 2>&1; then
+if ! apt-get update -y; then
+echo -e "${red}Failed to update${neutral}"
+fi
+if ! apt-get install -y "$package"; then
+echo -e "${red}Failed to install $package${neutral}"
+fi
+else
+echo -e "${green}$package is already installed, skipping...${neutral}"
+fi
+done
+}
 # Fungsi input domain
 function pasang_domain() {
 echo -e ""
@@ -1256,5 +1257,6 @@ echo ""
 read -p "[ Enter ]  TO REBOOT"
 
 reboot
+
 
 
