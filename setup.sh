@@ -43,10 +43,10 @@ clear;clear;clear
 
 # // Banner
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "\033[92;1m              𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗧𝗢 𝗦𝗖𝗥𝗜𝗣𝗧 𝗡𝗫𝗡𝗧𝗨𝗡𝗘𝗟              \033[0m"
-echo -e "  Developer » Klmpk𝗡𝗫𝗡VPN Tunneling{YELLOW}(${NC}${green} Stable Edition ${NC}${YELLOW})${NC}"
+echo -e "\033[92;1m              𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗧𝗢 𝗦𝗖𝗥𝗜𝗣𝗧 𝗙𝗔𝗡𝗡𝗧𝗨𝗡𝗘𝗟              \033[0m"
+echo -e "  Developer » Klmpk𝗙𝗡VPN Tunneling{YELLOW}(${NC}${green} Stable Edition ${NC}${YELLOW})${NC}"
 echo -e "  » This Will Quick Setup VPN Server On Your Server"
-echo -e "  Pembuat : ${green}𝗡𝗫𝗡uzijww ${NC}"
+echo -e "  Pembuat : ${green}𝗙𝗔𝗡uzijww ${NC}"
 echo -e "  Recode By My Self NZNXAJW VPN STORE ${YELLOW}(${NC} 2024 ${YELLOW})${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
@@ -142,7 +142,103 @@ function is_root() {
     fi
 
 }
-
+if ! apt update -y; then
+echo -e "${red}Failed to update${neutral}"
+fi
+if ! dpkg -s sudo >/dev/null 2>&1; then
+if ! apt install sudo -y; then
+echo -e "${red}Failed to install sudo${neutral}"
+fi
+else
+echo -e "${green}sudo is already installed, skipping...${neutral}"
+fi
+if ! dpkg -s software-properties-common debconf-utils >/dev/null 2>&1; then
+if ! apt install -y --no-install-recommends software-properties-common debconf-utils; then
+echo -e "${red}Failed to install basic packages${neutral}"
+fi
+else
+echo -e "${green}software-properties-common and debconf-utils are already installed, skipping...${neutral}"
+fi
+if dpkg -s exim4 >/dev/null 2>&1; then
+if ! apt remove --purge -y exim4; then
+echo -e "${red}Failed to remove exim4${neutral}"
+else
+echo -e "${green}exim4 removed successfully${neutral}"
+fi
+else
+echo -e "${green}exim4 is not installed, skipping...${neutral}"
+fi
+if dpkg -s ufw >/dev/null 2>&1; then
+if ! apt remove --purge -y ufw; then
+echo -e "${red}Failed to remove ufw${neutral}"
+else
+echo -e "${green}ufw removed successfully${neutral}"
+fi
+else
+echo -e "${green}ufw is not installed, skipping...${neutral}"
+fi
+if dpkg -s firewalld >/dev/null 2>&1; then
+if ! apt remove --purge -y firewalld; then
+echo -e "${red}Failed to remove firewalld${neutral}"
+else
+echo -e "${green}firewalld removed successfully${neutral}"
+fi
+else
+echo -e "${green}firewalld is not installed, skipping...${neutral}"
+fi
+if ! echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections; then
+echo -e "${red}Failed to configure iptables-persistent v4${neutral}"
+fi
+if ! echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections; then
+echo -e "${red}Failed to configure iptables-persistent v6${neutral}"
+fi
+if ! debconf-set-selections <<<"keyboard-configuration keyboard-configuration/layout select English"; then
+echo -e "${red}Failed to configure keyboard layout${neutral}"
+fi
+if ! debconf-set-selections <<<"keyboard-configuration keyboard-configuration/variant select English"; then
+echo -e "${red}Failed to configure keyboard variant${neutral}"
+fi
+export DEBIAN_FRONTEND=noninteractive
+if ! apt update -y; then
+echo -e "${red}Failed to update${neutral}"
+fi
+if ! apt-get upgrade -y; then
+echo -e "${red}Failed to upgrade${neutral}"
+else
+echo -e "${green}System upgraded successfully${neutral}"
+fi
+if ! apt dist-upgrade -y; then
+echo -e "${red}Failed to dist-upgrade${neutral}"
+else
+echo -e "${green}System dist-upgraded successfully${neutral}"
+fi
+function base_package() {
+print_install "Menginstall Packet Yang Dibutuhkan"
+packages=(
+libnss3-dev liblzo2-dev libnspr4-dev pkg-config libpam0g-dev libcap-ng-dev
+libcap-ng-utils libselinux1-dev flex bison make libnss3-tools libevent-dev bc
+rsyslog dos2unix zlib1g-dev libssl-dev libsqlite3-dev sed dirmngr libxml-parser-perl build-essential
+gcc g++ htop lsof tar wget curl ruby zip unzip p7zip-full libc6 util-linux
+ca-certificates iptables iptables-persistent netfilter-persistent
+net-tools openssl gnupg gnupg2 lsb-release shc cmake git whois
+screen socat xz-utils apt-transport-https gnupg1 dnsutils cron bash-completion ntpdate chrony jq
+tmux python3 python3-pip lsb-release gawk
+libncursesw5-dev libgdbm-dev tk-dev libffi-dev libbz2-dev checkinstall
+openvpn easy-rsa dropbear
+)
+for package in "${packages[@]}"; do
+if ! dpkg -s "$package" >/dev/null 2>&1; then
+if ! apt-get update -y; then
+echo -e "${red}Failed to update${neutral}"
+fi
+if ! apt-get install -y "$package"; then
+echo -e "${red}Failed to install $package${neutral}"
+fi
+else
+echo -e "${green}$package is already installed, skipping...${neutral}"
+fi
+done
+}
 # Buat direktori xray
 print_install "Membuat direktori xray"
     mkdir -p /etc/xray
@@ -283,103 +379,6 @@ function nginx_install() {
 }
 
 # Update and remove packages
-if ! apt update -y; then
-echo -e "${red}Failed to update${neutral}"
-fi
-if ! dpkg -s sudo >/dev/null 2>&1; then
-if ! apt install sudo -y; then
-echo -e "${red}Failed to install sudo${neutral}"
-fi
-else
-echo -e "${green}sudo is already installed, skipping...${neutral}"
-fi
-if ! dpkg -s software-properties-common debconf-utils >/dev/null 2>&1; then
-if ! apt install -y --no-install-recommends software-properties-common debconf-utils; then
-echo -e "${red}Failed to install basic packages${neutral}"
-fi
-else
-echo -e "${green}software-properties-common and debconf-utils are already installed, skipping...${neutral}"
-fi
-if dpkg -s exim4 >/dev/null 2>&1; then
-if ! apt remove --purge -y exim4; then
-echo -e "${red}Failed to remove exim4${neutral}"
-else
-echo -e "${green}exim4 removed successfully${neutral}"
-fi
-else
-echo -e "${green}exim4 is not installed, skipping...${neutral}"
-fi
-if dpkg -s ufw >/dev/null 2>&1; then
-if ! apt remove --purge -y ufw; then
-echo -e "${red}Failed to remove ufw${neutral}"
-else
-echo -e "${green}ufw removed successfully${neutral}"
-fi
-else
-echo -e "${green}ufw is not installed, skipping...${neutral}"
-fi
-if dpkg -s firewalld >/dev/null 2>&1; then
-if ! apt remove --purge -y firewalld; then
-echo -e "${red}Failed to remove firewalld${neutral}"
-else
-echo -e "${green}firewalld removed successfully${neutral}"
-fi
-else
-echo -e "${green}firewalld is not installed, skipping...${neutral}"
-fi
-if ! echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections; then
-echo -e "${red}Failed to configure iptables-persistent v4${neutral}"
-fi
-if ! echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections; then
-echo -e "${red}Failed to configure iptables-persistent v6${neutral}"
-fi
-if ! debconf-set-selections <<<"keyboard-configuration keyboard-configuration/layout select English"; then
-echo -e "${red}Failed to configure keyboard layout${neutral}"
-fi
-if ! debconf-set-selections <<<"keyboard-configuration keyboard-configuration/variant select English"; then
-echo -e "${red}Failed to configure keyboard variant${neutral}"
-fi
-export DEBIAN_FRONTEND=noninteractive
-if ! apt update -y; then
-echo -e "${red}Failed to update${neutral}"
-fi
-if ! apt-get upgrade -y; then
-echo -e "${red}Failed to upgrade${neutral}"
-else
-echo -e "${green}System upgraded successfully${neutral}"
-fi
-if ! apt dist-upgrade -y; then
-echo -e "${red}Failed to dist-upgrade${neutral}"
-else
-echo -e "${green}System dist-upgraded successfully${neutral}"
-fi
-function base_package() {
-print_install "Menginstall Packet Yang Dibutuhkan"
-packages=(
-libnss3-dev liblzo2-dev libnspr4-dev pkg-config libpam0g-dev libcap-ng-dev
-libcap-ng-utils libselinux1-dev flex bison make libnss3-tools libevent-dev bc
-rsyslog dos2unix zlib1g-dev libssl-dev libsqlite3-dev sed dirmngr libxml-parser-perl build-essential
-gcc g++ htop lsof tar wget curl ruby zip unzip p7zip-full libc6 util-linux
-ca-certificates iptables iptables-persistent netfilter-persistent
-net-tools openssl gnupg gnupg2 lsb-release shc cmake git whois
-screen socat xz-utils apt-transport-https gnupg1 dnsutils cron bash-completion ntpdate chrony jq
-tmux python3 python3-pip lsb-release gawk
-libncursesw5-dev libgdbm-dev tk-dev libffi-dev libbz2-dev checkinstall
-openvpn easy-rsa dropbear
-)
-for package in "${packages[@]}"; do
-if ! dpkg -s "$package" >/dev/null 2>&1; then
-if ! apt-get update -y; then
-echo -e "${red}Failed to update${neutral}"
-fi
-if ! apt-get install -y "$package"; then
-echo -e "${red}Failed to install $package${neutral}"
-fi
-else
-echo -e "${green}$package is already installed, skipping...${neutral}"
-fi
-done
-}
 clear
 # Fungsi input domain
 function pasang_domain() {
@@ -474,10 +473,11 @@ URL="https://api.telegram.org/bot$KEY/sendMessage"
 <code>Time     :</code><code>$TIMEZONE</code>
 <code>Exp Sc.  :</code><code>$exp</code>
 <code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>
-<b>NXN VPN STORE</b>
+<b>FAN VPN STORE</b>
 <code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>
 <i>Automatic Notifikasi Installer Script...</i>
-"'&reply_markup={"inline_keyboard":[[{"text":"ᴏʀᴅᴇʀ","url":"https://t.me/AJW29"},{"text":"Contack","url":"https://wa.me/6287898083051"}]]}l -s --max-time $TIMES -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
+"'&reply_markup={"inline_keyboard":[[{"text":"ᴏʀᴅᴇʀ","url":"https://t.me/AJW29"},{"text":"Contack","url":"https://wa.me/6287812264674"}]]}'
+    curl -s --max-time $TIMES -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
 }
 clear
 # Pasang SSL
