@@ -482,26 +482,29 @@ URL="https://api.telegram.org/bot$KEY/sendMessage"
 clear
 # Pasang SSL
 function pasang_ssl() {
-clear
-print_install "Memasang SSL Pada Domain"
-    rm -rf /etc/xray/xray.key
-    rm -rf /etc/xray/xray.crt
-    domain=$(cat /root/domain)
-    STOPWEBSERVER=$(lsof -i:80 | cut -d' ' -f1 | awk 'NR==2 {print $1}')
-    rm -rf /root/.acme.sh
-    mkdir /root/.acme.sh
-    systemctl stop $STOPWEBSERVER
-    systemctl stop nginx
-    curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
-    chmod +x /root/.acme.sh/acme.sh
-    /root/.acme.sh/acme.sh --upgrade --auto-upgrade
-    /root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-    /root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
-    ~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
-    chmod 777 /etc/xray/xray.key
-    print_success "SSL Certificate"
-}
+    clear
+    print_install "Memasang SSL Pada Domain"
 
+    if [ ! -d "/root/.acme.sh" ]; then
+mkdir /root/.acme.sh
+fi
+systemctl daemon-reload
+systemctl stop haproxy
+systemctl stop nginx
+if [ ! -f "/root/.acme.sh/acme.sh" ]; then
+curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
+chmod +x /root/.acme.sh/acme.sh
+fi
+domain=$(cat /etc/xray/domain)
+/root/.acme.sh/acme.sh --upgrade --auto-upgrade
+/root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+/root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256
+/root/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key --ecc
+cat /etc/xray/xray.crt /etc/xray/xray.key | tee /etc/haproxy/udud.pem
+chown www-data:www-data /etc/xray/xray.key
+chown www-data:www-data /etc/xray/xray.crt
+print_success "SSL Certificate"
+}
 function make_folder_xray() {
 rm -rf /etc/vmess/.vmess.db
     rm -rf /etc/vless/.vless.db
@@ -570,13 +573,13 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
     curl -s ipinfo.io/city >>/etc/xray/city
     curl -s ipinfo.io/org | cut -d " " -f 2-10 >>/etc/xray/isp
     print_install "Memasang Konfigurasi Packet"
-    wget -O /etc/haproxy/haproxy.cfg "${REPO}config/haproxy.cfg" >/dev/null 2>&1
-    wget -O /etc/nginx/conf.d/xray.conf "${REPO}config/xray.conf" >/dev/null 2>&1
+    wget -O /etc/haproxy/haproxy.cfg "https://raw.githubusercontent.com/Pemulaajiw/script/main/config/haproxy.cfg" >/dev/null 2>&1
+    wget -O /etc/nginx/conf.d/xray.conf "https://raw.githubusercontent.com/Pemulaajiw/script/main/config/xray.conf" >/dev/null 2>&1
     sed -i "s/xxx/${domain}/g" /etc/haproxy/haproxy.cfg
     sed -i "s/xxx/${domain}/g" /etc/nginx/conf.d/xray.conf
     curl ${REPO}config/nginx.conf > /etc/nginx/nginx.conf
     
-cat /etc/xray/xray.crt /etc/xray/xray.key | tee /etc/haproxy/hap.pem
+    cat /etc/xray/xray.crt /etc/xray/xray.key | tee /etc/haproxy/hap.pem
 
     # > Set Permission
     chmod +x /etc/systemd/system/runn.service
@@ -682,7 +685,7 @@ print_success "Password SSH"
 function udp_mini(){
 clear
 print_install "Memasang Service Limit IP & Quota"
-wget -q https://raw.githubusercontent.com/liontunnel/scriptvpn/main/config/fv-tunnel && chmod +x fv-tunnel && ./fv-tunnel
+wget -q https://raw.githubusercontent.com/Pemulaajiw/script/main/config/fv-tunnel && chmod +x fv-tunnel && ./fv-tunnel
 
 # // Installing UDP Mini
 mkdir -p /usr/local/kyt/
@@ -733,11 +736,16 @@ function ins_dropbear(){
 clear
 print_install "Menginstall Dropbear"
 # // Installing Dropbear
-apt-get install dropbear -y > /dev/null 2>&1
-wget -q -O /etc/default/dropbear "${REPO}config/dropbear.conf"
-chmod +x /etc/default/dropbear
-/etc/init.d/dropbear restart
-/etc/init.d/dropbear status
+if [ -n "$dropbear_conf_url" ]; then
+[ -f /etc/default/dropbear ] && rm /etc/default/dropbear
+wget -q -O /etc/default/dropbear $dropbear_conf_url >/dev/null 2>&1 || echo -e "${red}Failed to download dropbear.conf${neutral}"
+[ -f /etc/init.d/dropbear ] && rm /etc/init.d/dropbear
+wget -q -O /etc/init.d/dropbear $dropbear_init_url && chmod +x /etc/init.d/dropbear >/dev/null 2>&1 || echo -e "${red}Failed to download dropbear.init${neutral}"
+[ -f /etc/dropbear/dropbear_dss_host_key ] && rm /etc/dropbear/dropbear_dss_host_key
+wget -q -O /etc/dropbear/dropbear_dss_host_key $dropbear_dss_url && chmod +x /etc/dropbear/dropbear_dss_host_key >/dev/null 2>&1 || echo -e "${red}Failed to download dropbear_dss_host_key${neutral}"
+else
+echo -e "${yellow}dropbear_conf_url is not set, skipping download of dropbear_dss_host_key${neutral}"
+fi
 print_success "Dropbear"
 }
 
@@ -858,7 +866,7 @@ echo "Banner /etc/gerhanatunnel.txt" >>/etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/gerhanatunnel.txt"@g' /etc/default/dropbear
 
 # Ganti Banner
-wget -O /etc/gerhanatunnel.txt "${REPO}files/issue.net"
+wget -O /etc/kyt.txt "${REPO}files/issue.net"
 print_success "Fail2ban"
 }
 
@@ -903,6 +911,64 @@ apt autoremove -y >/dev/null 2>&1
 print_success "ePro WebSocket Proxy"
 }
 
+function udp-custom(){
+print_install "Menginstall UDP-CUSTOM"
+cd
+rm -rf /root/udp
+mkdir -p /root/udp
+
+# install udp-custom
+echo downloading udp-custom
+wget -q --show-progress --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1_VyhL5BILtoZZTW4rhnUiYzc4zHOsXQ8' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1_VyhL5BILtoZZTW4rhnUiYzc4zHOsXQ8" -O /root/udp/udp-custom && rm -rf /tmp/cookies.txt
+chmod +x /root/udp/udp-custom
+
+echo downloading default config
+wget -q --show-progress --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1_XNXsufQXzcTUVVKQoBeX5Ig0J7GngGM' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1_XNXsufQXzcTUVVKQoBeX5Ig0J7GngGM" -O /root/udp/config.json && rm -rf /tmp/cookies.txt
+chmod 644 /root/udp/config.json
+
+if [ -z "$1" ]; then
+cat <<EOF > /etc/systemd/system/udp-custom.service
+[Unit]
+Description=UDP Custom by ePro Dev. Team
+
+[Service]
+User=root
+Type=simple
+ExecStart=/root/udp/udp-custom server
+WorkingDirectory=/root/udp/
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=default.target
+EOF
+else
+cat <<EOF > /etc/systemd/system/udp-custom.service
+[Unit]
+Description=UDP Custom by ePro Dev. Team
+
+[Service]
+User=root
+Type=simple
+ExecStart=/root/udp/udp-custom server -exclude $1
+WorkingDirectory=/root/udp/
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=default.target
+EOF
+fi
+
+echo start service udp-custom
+systemctl start udp-custom &>/dev/null
+
+echo enable service udp-custom
+systemctl enable udp-custom &>/dev/null
+clear
+print_success "UDP-CUSTOM BY FAN STORE VPN"
+}
+
 function noobzvpn(){
 clear
 cd
@@ -914,15 +980,19 @@ cd noobzvpns
 bash install.sh
 cd
 rm -rf noobzvpns.zip
-systemctl restart noobzvpns
+echo start service noobzvpns
+systemctl start noobzvpns &>/dev/null
+
+echo enable service noobzvpns
+systemctl enable noobzvpns &>/dev/null
 print_success "NOOBZVPN"
 }
 
 function ins_trgo(){
-clear
 cd
 print_install "Memasang TrojanGo"
-wget -q "${REPO}ins-trgo.sh && chmod +x ins-trgo.sh && ./ins-trgo.sh"
+wget "https://raw.githubusercontent.com/king-vpn/autoscript-vip/main/install/ins-trgo.sh && chmod +x ins-trgo.sh && ./ins-trgo.sh" >/dev/null 2>&1
+clear
 print_success "TROJANGO"
 }
 
@@ -950,6 +1020,8 @@ systemctl restart haproxy
     systemctl enable --now netfilter-persistent
     systemctl enable --now ws
     systemctl enable --now fail2ban
+	systemctl enable --now udp-custom
+    systemctl enable --NOW noobzvpns
 history -c
 echo "unset HISTFILE" >> /etc/profile
 
@@ -1043,7 +1115,7 @@ cd
     clear
     print_install "Memasang Menu Packet"
     wget ${REPO}menu/menu.zip
-    7z x -pFanVpnID0311 menu.zip
+    7z x -pFanVpnID0311DiJual58 menu.zip
     chmod +x menu/*
     mv menu/* /usr/local/sbin
     rm -rf menu
@@ -1177,6 +1249,7 @@ clear
     ins_swab
     ins_Fail2ban
     ins_epro
+	udp-custom
     noobzvpn
     ins_trgo
     ins_restart
@@ -1201,7 +1274,7 @@ echo "" > /etc/xray/noob
 secs_to_human "$(($(date +%s) - ${start}))"
 sudo hostnamectl set-hostname $username
 echo ""echo -e "\e[94;1m╔═════════════════════════════════════════════════╗\e[0m"
-echo -e "\e[96;1m          -[ NXNSAJA TUNNELING PROJECT ]-                 \e[0m"
+echo -e "\e[96;1m          -[ FANSAJA TUNNELING PROJECT ]-                 \e[0m"
 echo -e "\e[94;1m╚═════════════════════════════════════════════════╝\e[0m"
 echo -e ""
 echo -e "\e[94;1m╔═════════════════════════════════════════════════╗\e[0m"
@@ -1234,8 +1307,8 @@ echo -e "\033[0;32m└───────────────────�
 echo -e "\e[94;1m╔═════════════════════════════════════════════════╗\e[0m"
 echo -e "\e[92;1m               [ TERIMAKASIH ]                      \e[0m"
 echo -e "\e[94;1m╚═════════════════════════════════════════════════╝\e[0m"
-echo -e " t.me/XLSMARTLC"
-echo -e " TERIMAKASIH SUDAH MENGGUNAKAN LAYANAN SC NXN PREMIUM"
+echo -e " t.me/Fauziii09"
+echo -e " TERIMAKASIH SUDAH MENGGUNAKAN LAYANAN SC FAN PREMIUM"
 echo -e "\e[94;1m╚═════════════════════════════════════════════════╝\e[0m"
 echo -e ""
 echo ""
