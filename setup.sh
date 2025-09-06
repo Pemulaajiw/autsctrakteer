@@ -86,6 +86,76 @@ if [ "${EUID}" -ne 0 ]; then
 		echo "You need to run this script as root"
 		exit 1
 fi
+if ! apt update -y; then
+echo -e "${red}Failed to update${neutral}"
+fi
+if ! dpkg -s sudo >/dev/null 2>&1; then
+if ! apt install sudo -y; then
+echo -e "${red}Failed to install sudo${neutral}"
+fi
+else
+echo -e "${green}sudo is already installed, skipping...${neutral}"
+fi
+if ! dpkg -s software-properties-common debconf-utils >/dev/null 2>&1; then
+if ! apt install -y --no-install-recommends software-properties-common debconf-utils; then
+echo -e "${red}Failed to install basic packages${neutral}"
+fi
+else
+echo -e "${green}software-properties-common and debconf-utils are already installed, skipping...${neutral}"
+fi
+if dpkg -s exim4 >/dev/null 2>&1; then
+if ! apt remove --purge -y exim4; then
+echo -e "${red}Failed to remove exim4${neutral}"
+else
+echo -e "${green}exim4 removed successfully${neutral}"
+fi
+else
+echo -e "${green}exim4 is not installed, skipping...${neutral}"
+fi
+if dpkg -s ufw >/dev/null 2>&1; then
+if ! apt remove --purge -y ufw; then
+echo -e "${red}Failed to remove ufw${neutral}"
+else
+echo -e "${green}ufw removed successfully${neutral}"
+fi
+else
+echo -e "${green}ufw is not installed, skipping...${neutral}"
+fi
+if dpkg -s firewalld >/dev/null 2>&1; then
+if ! apt remove --purge -y firewalld; then
+echo -e "${red}Failed to remove firewalld${neutral}"
+else
+echo -e "${green}firewalld removed successfully${neutral}"
+fi
+else
+echo -e "${green}firewalld is not installed, skipping...${neutral}"
+fi
+if ! echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections; then
+echo -e "${red}Failed to configure iptables-persistent v4${neutral}"
+fi
+if ! echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections; then
+echo -e "${red}Failed to configure iptables-persistent v6${neutral}"
+fi
+if ! debconf-set-selections <<<"keyboard-configuration keyboard-configuration/layout select English"; then
+echo -e "${red}Failed to configure keyboard layout${neutral}"
+fi
+if ! debconf-set-selections <<<"keyboard-configuration keyboard-configuration/variant select English"; then
+echo -e "${red}Failed to configure keyboard variant${neutral}"
+fi
+export DEBIAN_FRONTEND=noninteractive
+if ! apt update -y; then
+echo -e "${red}Failed to update${neutral}"
+fi
+if ! apt-get upgrade -y; then
+echo -e "${red}Failed to upgrade${neutral}"
+else
+echo -e "${green}System upgraded successfully${neutral}"
+fi
+if ! apt dist-upgrade -y; then
+echo -e "${red}Failed to dist-upgrade${neutral}"
+else
+echo -e "${green}System dist-upgraded successfully${neutral}"
+fi
 if [ "$(systemd-detect-virt)" == "openvz" ]; then
 		echo "OpenVZ is not supported"
 		exit 1
@@ -1186,4 +1256,5 @@ echo ""
 read -p "[ Enter ]  TO REBOOT"
 
 reboot
+
 
