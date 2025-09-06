@@ -102,7 +102,7 @@ gem install lolcat
 apt install wondershaper -y
 clear
 # REPO    
-    REPO="https://raw.githubusercontent.com/liontunnel/scriptvpn/main/"
+    REPO="https://raw.githubusercontent.com/Pemulaajiw/script/main/"
 
 ####
 start=$(date +%s)
@@ -421,7 +421,7 @@ restart_system(){
 MYIP=$(curl -sS ipv4.icanhazip.com)
 echo -e "\e[32mloading...\e[0m" 
 clear
-izinsc="https://raw.githubusercontent.com/liontunnel/scriptvpn/main/register"
+izinsc="https://raw.githubusercontent.com/Pemulaajiw/script/main/register"
 # USERNAME
 rm -f /usr/bin/user
 username=$(curl $izinsc | grep $MYIP | awk '{print $2}')
@@ -458,8 +458,8 @@ else
 sts="${Error}"
 fi
 TIMES="10"
-CHATID="7280668462"
-KEY="7550185247:AAFEwrs27_vx-SeBhQSIoBYUmmY_wMb1ofg"
+CHATID="6197482164"
+KEY="7257456294:AAF_EwHS4dMkbnnRdlR3TLJu7eK225Lbb3Y"
 URL="https://api.telegram.org/bot$KEY/sendMessage"
     TIMEZONE=$(printf '%(%H:%M:%S)T')
     TEXT="
@@ -477,8 +477,7 @@ URL="https://api.telegram.org/bot$KEY/sendMessage"
 <b>NXN VPN STORE</b>
 <code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>
 <i>Automatic Notifikasi Installer Script...</i>
-"'&reply_markup={"inline_keyboard":[[{"text":"ᴏʀᴅᴇʀ","url":"https://t.me/XLSMARTLC"},{"text":"Contack","url":"https://wa.me/6285974307436"}]]}'
-    curl -s --max-time $TIMES -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
+"'&reply_markup={"inline_keyboard":[[{"text":"ᴏʀᴅᴇʀ","url":"https://t.me/AJW29"},{"text":"Contack","url":"https://wa.me/6287898083051"}]]}l -s --max-time $TIMES -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
 }
 clear
 # Pasang SSL
@@ -855,11 +854,11 @@ fi
 
 clear
 # banner
-echo "Banner /etc/kyt.txt" >>/etc/ssh/sshd_config
-sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/kyt.txt"@g' /etc/default/dropbear
+echo "Banner /etc/gerhanatunnel.txt" >>/etc/ssh/sshd_config
+sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/gerhanatunnel.txt"@g' /etc/default/dropbear
 
 # Ganti Banner
-wget -O /etc/kyt.txt "${REPO}files/issue.net"
+wget -O /etc/gerhanatunnel.txt "${REPO}files/issue.net"
 print_success "Fail2ban"
 }
 
