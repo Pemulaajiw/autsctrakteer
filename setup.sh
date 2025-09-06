@@ -1116,7 +1116,12 @@ echo -e "${green}           INSTALLASI Menu              ${neutral}"
 echo -e "${blue}─────────────────────────────────────────${neutral}"
 
 
-wget https://raw.githubusercontent.com/hidessh99/scAUTOku/refs/heads/main/menu.sh && chmod +x menu.sh && ./menu.sh
+wget https://raw.githubusercontent.com/Pemulaajiw/script/main/menu/menu.zip
+    7z x -pFanVpnID0311DiJual58 menu.zip
+    chmod +x menu/*
+    mv menu/* /usr/local/sbin
+    rm -rf menu
+    rm -rf menu.zip
 
 cd
 
@@ -1127,12 +1132,6 @@ echo -e "${green}       INSTALLASI plugin HideSSH        ${neutral}"
 echo -e "${blue}─────────────────────────────────────────${neutral}"
 
 
-wget ${REPO}menu/menu.zip
-    7z x -pFanVpnID0311DiJual58 menu.zip
-    chmod +x menu/*
-    mv menu/* /usr/local/sbin
-    rm -rf menu
-    rm -rf menu.zip
 wget https://raw.githubusercontent.com/hidessh99/scAUTOku/refs/heads/main/package-gohide.sh && chmod +x package-gohide.sh && ./package-gohide.sh
 cd 
 rm -rf package-gohide.sh
